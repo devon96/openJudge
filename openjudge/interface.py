@@ -105,15 +105,16 @@ def attempt_status():
 @app.post('/user/score')
 def user_score():
     user, = jget('user')
-    score = tools.get_user_score(user)
+    score = round(tools.get_user_score(user),1)
     return {'score': score}
 
 
 @app.post('/user/leader')
 def user_list():
     users = tools.get_all_users()
-    data = [(tools.get_user_score(u), u) for u in users]
+    data = [(round(tools.get_user_score(u),1), u) for u in users]
     data.sort(key=lambda x: x[0], reverse=True)
+    print(data)
     return {'leader': data}
 
 
@@ -121,5 +122,5 @@ def user_list():
 def user_details():
     token,  = jget('token')
     user = tools.get_user(token)['name']
-    score = tools.get_user_score(user)
+    score = round(tools.get_user_score(user),1)
     return {'user': user, 'score': score}
