@@ -114,7 +114,6 @@ def user_list():
     users = tools.get_all_users()
     data = [(round(tools.get_user_score(u),1), u) for u in users]
     data.sort(key=lambda x: x[0], reverse=True)
-    print(data)
     return {'leader': data}
 
 
