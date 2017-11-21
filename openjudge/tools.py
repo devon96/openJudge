@@ -179,6 +179,20 @@ def __read_contest_wrappers__():
     log('Read contest wrappers')
     return wrappers
 
+def __read_scoring__():
+    "Copy scoring method"
+    if not os.path.exists(config.variable_root):
+        message = "Variable directory not found in {}"
+        message = message.format(config.variable_root)
+        raise Exception(message)
+    vr = config.variable_root
+    with open(os.path.join(vr, 'scoring.json'), 'r') as fl:
+        scoring = json.load(fl)
+        if(scoring['scoring'] not in ['legacy', 'simplified']):
+            raise Exception('Incorrect scoring type detected. Available either "legacy" or "simplified"')
+    log('Read contest scoring method')
+    return scoring
+
 
 def setup_contest():
     "Set up the contest"
@@ -186,11 +200,13 @@ def setup_contest():
     __copy_templates__()
     __copy_static__()
     wrappers = __read_contest_wrappers__()
+    scoring = __read_scoring__()
     qdata = __copy_questions__()
     with Contest() as contest:
         contest['questions'] = qdata
         contest['intro'] = intro
         contest['wrappers'] = wrappers
+        contest['scoring'] = scoring
         if 'attempts' not in contest:
             contest['attempts'] = {}
         if 'tokens' not in contest:
@@ -314,16 +330,26 @@ def get_user_score(user):
             u_q_seen = defaultdict(set)
             for A in all_attempts:
                 a_user, q = A['user']['name'], A['qpk']
-
+                if contest['scoring']['scoring'] == 'legacy':
+                     q_tot[q] += 1
                 if all(A['status']):
                     if q not in u_q_seen[a_user]:
                         # Valid attempt
                         u_q_seen[a_user].add(q)
-                        q_cor[q] += 1
 
-                        if a_user == user:
-                            correct = q_cor[q]                        
-                            score += max(1.1 - (0.1 * correct),0.5)
+                        if contest['scoring']['scoring'] == 'simplified':
+                            q_cor[q] += 1
+                            if a_user == user:
+                                correct = q_cor[q]                        
+                                score += max(1.1 - (0.1 * correct),0.5)
+                        elif contest['scoring']['scoring'] == 'legacy':
+                            if a_user == user:
+                                q_cor[q] += 1
+                                correct, total = q_cor[q], q_tot[q]
+                                frac = float(total - correct) / total
+                                # First attempt correct
+                                elite_attempt = (total == 1 and correct == 1)
+                                score += 1 if elite_attempt else frac
 
     return score
 

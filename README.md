@@ -140,9 +140,17 @@ $ openjudge
 Scoring
 -------
 
+Scoring can be set to two () of the options. You can select desired options in scoring.json of your ContestData
+
+**legacy**
+
 This is still the same. The score is determined by `(total - correct_valid) / total` attempts on a question by everyone at any given time. Only the first correct attempt by a person on a question counts for the `correct_valid`. Subsequent correct answers are considered wrong.
 
 This leads to very few ties.
+
+**simplified**
+
+Modified version which is based on a simple rule. First (correct) submission recieves 1 point. Every subsequent correct submission is smaller by 0.1. So 2nd corect submission gets 0.9, 3rd gets 0.8 all the way down to 0.5 where the score is capped at.
 
 
 Todo
